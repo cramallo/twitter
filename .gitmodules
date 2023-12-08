@@ -1,0 +1,9 @@
+[submodule "timeline"]
+	path = timeline
+	url = git@github.com:cramallo/twitter_timeline.git
+[submodule "users"]
+	path = users
+	url = git@github.com:cramallo/twitter_users.git
+[submodule "tweets"]
+	path = tweets
+	url = git@github.com:cramallo/twitter_tweets.git
