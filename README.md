@@ -18,7 +18,7 @@ Timeline:
 
 ## Diseño del sistema
 
-El análisis de arquitectura hecho a profundidad se encuentra en este documento.
+El análisis de arquitectura hecho a profundidad se encuentra en el [siguiente](https://docs.google.com/document/d/1tE1kxX1gIPZvUmemteqJIfWkPHaImWT1xwUnUsbLeJc/edit#heading=h.1il4mncsnoch) documento.
 
 Con respecto a la implementación se redujeron casos de uso por quedar fuera de scope. Por lo que se tomaron los casos
 base dados en la consigna.
@@ -117,8 +117,83 @@ y consultas contra el sistema de tweets para no saturar la cache con usuarios qu
 
 - Hay casos de uso border que se indicaron en el documento que no estan implementados en el código.
 
+## Endpoints:
+
+### Seguir a alguien:
+
+curl --location --request PUT 'localhost:8080/follows/follow' \
+--header 'user_name: charly' \
+--header 'Content-Type: application/json' \
+--data '{
+    "followee": "mariano"
+}'
+
+### Ver los usuarios seguidos de un usuario:
+
+curl --location --request GET 'localhost:8080/follows/followees?offset=0' \
+--header 'user_name: charly' \
+--header 'Content-Type: application/json' \
+--data '{
+    "followee": "mariano"
+}'
+
+### Ver los followers de un usuario:
+
+curl --location --request GET 'localhost:8080/follows/followers/mariano?offset=0' \
+--header 'user_name: charly' \
+--header 'Content-Type: application/json' \
+--data '{
+    "followee": "mariano"
+}'
+
+### Publicar un tweet
+
+curl --location 'localhost:8091/tweet' \
+--header 'user_name: mariano' \
+--header 'Content-Type: application/json' \
+--data '{
+    "content": "hola!"
+}'
+
+
+### Ver el timeline de un usuario
+
+curl --location 'localhost:8090/timeline?fromIndex=0' \
+--header 'user_name: charly' \
+--data ''
+
+
 ### Como levantar el proyecto
 
+(Aclaración, Idealmente las 3 apps deberian levantarse con unico comando de docker-compose).
+
 1- Tener instalado docker.
-2- Cargar los topicos de los 
-2- Las 3 aplicaciones se tienen que levantar por separado.
+2- Bajar imagen de rabbitmq y redis. (latests)
+3- Configurar rabbit mq agregando los topicos de tweets-events-queue y follows-events-queue:
+  - desde http://localhost:15672. El login es username: guest, password: guest.
+4- Aregar los exchange de tweets-events-exchange y follows-events-exchange, y agregar los bindings a sus topicos. (Esto tambien se podria sumar en una property):
+
+Agregar topicos y exchanges:
+
+-  http://localhost:15672/queues -> en la sección de add new agregar el nombre **follow-events-queue** y hacer click en add queue.
+-  http://localhost:15672/queues -> en la sección de add new agregar el nombre **tweet-events-queue** y hacer click en add queue.
+-  http://localhost:15672/exchange -> en la sección de add new agregar el nombre **follow-events-exchange** y hacer click en add exchange.
+-  http://localhost:15672/exchange -> en la sección de add new agregar el nombre **tweet-events-exchange** y hacer click en add exchange.
+
+Agregar bindings:
+
+desde http://localhost:15672/exchange en la tabla hacer click en el nombre de los exchange creados. Esto llevara a una vista para agregar los bindings (conexion topicos con los exchange).
+
+follow-events-exchange:
+
+- Add binding from this exchange -> To queue -> agregar el topico de follow-events-queue, como routing key dejar follow-events-routing-key
+
+tweet-events-exchange:
+
+- Add binding from this exchange -> To queue -> agregar el topico de tweet-events-queue, como routing key dejar tweet-events-routing-key
+
+5- Desde la app user correr el comando docker-compose up. (con esto se levantará rabbitmq).
+6- Levantar aplicacion de users.
+7- Levantar aplicación de tweets.
+8- Correr comando docker-compose up en aplicación de timeline.
+9- Levantar aplicación de timeline.
